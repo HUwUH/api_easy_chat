@@ -1,8 +1,27 @@
 // -------------------------预先的函数定义-----------------------------
 //收集对话信息，返回list(map(str,str))。
-function collectCurrentMessage(useReasoning){
+function collectCurrentMessage(includeReasoning = false) {
+    const messages = [];
+    const messageElements = document.querySelectorAll('.message');
 
+    messageElements.forEach(message => {
+        const role = message.classList.contains('system') ? 'system' :
+                     message.classList.contains('user') ? 'user' :
+                     message.classList.contains('assistant') ? 'assistant' :
+                     'reasoning'; // 假设推理消息也有特定类名
+
+        // 如果 excludeReasoning 为 true，跳过 reasoning 类型的消息
+        if (!includeReasoning && role === 'reasoning') {
+            return; // 跳过当前消息
+        }
+
+        const content = message.querySelector('.content').textContent;
+        messages.push({ role, content });
+    });
+
+    return messages;
 }
+
 //保存当前对话
 function saveCurrentHistory(){
     //在对话历史中显示新的项目（id为时间戳，命名初始化为时间戳）
@@ -16,7 +35,24 @@ function updateBasicinfo(){
 function submitToBackend(type) { 
     alert(`提交到后端模型功能待实现`); 
 }
-
+// 辅助函数：创建消息模板
+function createMessageTemplate(role) {
+    return `
+    <div class="message ${role}">
+        <div class="message-actions">
+            <button onclick="editMessage(this)">✏️</button>
+            <button onclick="deleteMessage(this)">🗑️</button>
+        </div>
+        <div class="content"></div>
+    </div>
+    <div class="insert-zone" onmouseover="showInsertButtons(this)" onmouseout="hideInsertButtons(this)">
+        <div class="insert-buttons">
+            <button onclick="addMessageAfter(this,'system', 'init')">System</button>
+            <button onclick="addMessageAfter(this,'user', 'init')">User</button>
+            <button onclick="addMessageAfter(this,'assistant', 'init')">AI</button>
+        </div>
+    </div>`;
+}
 
 
 // -------------------------前端函数定义-----------------------------
@@ -61,22 +97,8 @@ function hideInsertButtons(zone) {
     zone.querySelector('.insert-buttons').style.display = 'none';
 }
 //插入消息
-function addMessageAfter(triggerElement,role,content) {
-    const template = `
-    <div class="message ${role}">
-        <div class="message-actions">
-            <button onclick="editMessage(this)">✏️</button>
-            <button onclick="deleteMessage(this)">🗑️</button>
-        </div>
-        <div class="content">新${content}消息</div>
-    </div>
-    <div class="insert-zone" onmouseover="showInsertButtons(this)" onmouseout="hideInsertButtons(this)">
-        <div class="insert-buttons">
-            <button onclick="addMessageAfter(this,'system', 'init')">System</button>
-            <button onclick="addMessageAfter(this,'user', 'init')">User</button>
-            <button onclick="addMessageAfter(this,'assistant', 'init')">AI</button>
-        </div>
-    </div>`;
+function addMessageAfter(triggerElement,role) {
+    const template = createMessageTemplate(role);
 
     const insertZone = triggerElement.closest('.insert-zone');
     if (insertZone) {
@@ -133,75 +155,92 @@ function saveHistory(){
 }
 // 提交模型
 async function submitToModel(type) {
-    // 获取从前端输入界面传来的各个参数
-    const url = document.getElementById('webUrl').value;  // 从前端界面获取URL
-    const api_key = document.getElementById('apiKey').value;  // 从前端界面获取API Key
-    const modelname = type === 'general' ? document.getElementById('generalModel').value : document.getElementById('reasoningModel').value;  // 根据类型选择模型名称
-    const max_token = document.getElementById('maxTokens').value;  // 从前端界面获取最大token数
-    const temperature = document.getElementById('temperature').value;  // 从前端界面获取温度
+    try {
+        // 获取从前端输入界面传来的各个参数
+        const url = document.getElementById('webUrl').value;  // 从前端界面获取URL
+        const api_key = document.getElementById('apiKey').value;  // 从前端界面获取API Key
+        const modelname = type === 'general' ? document.getElementById('generalModel').value : document.getElementById('reasoningModel').value;  // 根据类型选择模型名称
+        const max_token = parseInt(document.getElementById('maxTokens').value);  // 从前端界面获取最大token数
+        const temperature = parseFloat(document.getElementById('temperature').value);  // 从前端界面获取温度
 
-    // 获取当前对话消息（你可以自定义 collectCurrentMessage 函数来收集对话历史）
-    const messages = collectCurrentMessage(false);
+        // 获取当前对话消息
+        const messages = collectCurrentMessage(false);
 
-    // 构建请求体
-    const requestPayload = {
-        model: modelname,
-        messages: messages,
-        max_tokens: max_token,
-        temperature: temperature,
-        stream: true
-    };
+        // 构建请求体
+        const requestPayload = {
+            model: modelname,
+            messages: messages,
+            max_tokens: max_token,
+            temperature: temperature,
+            stream: true
+        };
 
-    // 构建请求头
-    const all_message = {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${api_key}`  // 添加 Authorization 头部，使用 Bearer Token
-        },
-        body: JSON.stringify(requestPayload)
-    };
+        // 构建请求头
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${api_key}`  // 添加 Authorization 头部，使用 Bearer Token
+            },
+            body: JSON.stringify(requestPayload)
+        };
 
-    // 发起请求
-    const response = await fetch(url, all_message);
+        // 发起请求
+        const response = await fetch(url, requestOptions);
 
-    // 使用 ReadableStream 逐步接收流式数据
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let result = '';
+        // 检查响应状态
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-    // 逐步处理每个数据块
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        // 创建新的消息气泡
+        const chatContainer = document.querySelector('.chat-container');
+        const lastMessage = chatContainer.lastElementChild;
 
-        const chunk = decoder.decode(value, { stream: true });
-        result += chunk;
+        // 根据模型类型插入模板
+        const template = type === 'general' ? createMessageTemplate('assistant') : createMessageTemplate('reasoning') + createMessageTemplate('assistant');
+        lastMessage.insertAdjacentHTML('afterend', template);
 
-        // 实时更新 UI（逐步显示AI回复）
-        updateChatUI(chunk);
+        // 获取新插入的消息内容区域
+        const reasoningContentDiv = type === 'reasoning' ? chatContainer.querySelector('.message.reasoning .content') : null;
+        const assistantContentDiv = chatContainer.querySelector('.message.assistant .content');
+
+        // 使用 ReadableStream 逐步接收流式数据
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let result = '';
+        let jsonString = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            jsonString += decoder.decode(value, { stream: true });
+
+            //TODO：这里data的解析出了问题
+            const data = JSON.parse(jsonString);
+            jsonString = '';
+            
+
+            // 处理流式数据
+            if (data.choices && data.choices[0].delta) {
+                const reasoningContent = data.choices[0].delta.reasoning_content;
+                const content = data.choices[0].delta.content;
+
+                // 更新推理内容
+                if (reasoningContent && reasoningContentDiv) {
+                    reasoningContentDiv.textContent += reasoningContent;
+                }
+
+                // 更新普通内容
+                if (content && assistantContentDiv) {
+                    assistantContentDiv.textContent += content;
+                }
+            }
+            result += chunk;
+        }
+    } catch (error) {
+        console.error('提交模型时出错:', error);
+        alert('提交模型时出错，请检查网络或参数设置。');
     }
-
-    // 完成最下面的按钮模板
-    const template = `
-        <div class="insert-zone" onmouseover="showInsertButtons(this)" onmouseout="hideInsertButtons(this)">
-            <div class="insert-buttons">
-                <button onclick="addMessageAfter(this,'system', 'init')">System</button>
-                <button onclick="addMessageAfter(this,'user', 'init')">User</button>
-                <button onclick="addMessageAfter(this,'assistant', 'init')">AI</button>
-            </div>
-        </div>`;
-    
-    // 将按钮模板添加到UI
-    const chatContainer = document.getElementById('chatContainer');
-    chatContainer.insertAdjacentHTML('beforeend', template);
-}
-
-// 更新聊天UI
-function updateChatUI(content) {
-    const chatContainer = document.getElementById('chatContainer');
-    const messageElement = document.createElement('div');
-    messageElement.className = 'message assistant';
-    messageElement.innerText = content;
-    chatContainer.appendChild(messageElement);
 }

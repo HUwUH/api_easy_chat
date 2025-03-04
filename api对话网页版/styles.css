@@ -105,7 +105,10 @@ body {
     background: #f5f5f5;
     margin-right: auto;
 }
-
+.reasoning {
+    background-color: #037d8b; /* 推理内容的背景色 */
+    margin-right: auto;
+}
 .system {
     background: #e8f5e9;
     margin: 0 auto;
