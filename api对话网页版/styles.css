@@ -1,0 +1,201 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    height: 100%;
+}
+
+
+
+/* ---------------------------------边栏内容---------------------------------- */
+
+.sidebar {
+    width: 300px;
+    background: #f5f5f5;
+    border-right: 1px solid #ddd;
+    transition: margin-left 0.3s ease;
+    position: relative;
+    margin-left: 0; /* 初始可见状态 */
+}
+
+.sidebar-content {
+    padding: 20px;
+    height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.toggle-btn {
+    position: absolute;
+    right: -40px; /* 调整位置 */
+    top: 10px;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 5px 8px;
+    transition: transform 0.3s;
+}
+
+.history-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.params {
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
+}
+
+.param-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.param-group input {
+    width: 100%;
+    padding: 5px;
+}
+
+
+
+
+
+/* ---------------------------------主体内容---------------------------------- */
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-container {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.message {
+    max-width: 80%;
+    padding: 20px;
+    border-radius: 12px;
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.user {
+    background: #e3f2fd;
+    margin-left: auto;
+}
+
+.assistant {
+    background: #f5f5f5;
+    margin-right: auto;
+}
+
+.system {
+    background: #e8f5e9;
+    margin: 0 auto;
+    width: 90%;
+}
+
+.message-actions {
+    position: absolute;
+    top: -25px;
+    right: 0;
+    display: none;
+    gap: 5px;
+}
+
+.message:hover .message-actions {
+    display: flex;
+}
+
+.insert-zone {
+    position: relative;
+    height: 30px;
+    margin: -15px 0;
+}
+
+.insert-buttons {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    gap: 5px;
+    background: white;
+    padding: 5px;
+    border-radius: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.insert-zone:hover .insert-buttons {
+    display: flex;
+}
+
+.insert-btn {
+    cursor: pointer;
+    padding: 3px 8px;
+    border: none;
+    border-radius: 15px;
+    font-size: 0.9em;
+}
+
+.insert-system {
+    background: #c8e6c9;
+}
+.insert-user {
+    background: #bbdefb;
+}
+.insert-assistant {
+    background: #e0e0e0;
+}
+
+.action-buttons {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #ddd;
+    background: #f8f9fa;
+}
+
+button {
+    padding: 8px 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    transition: opacity 0.2s;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+#saveHistory {
+    background: #4caf50;
+    color: white;
+}
+
+#submitGeneral {
+    background: #2196f3;
+    color: white;
+}
+
+#submitReasoning {
+    background: #673ab7;
+    color: white;
+}

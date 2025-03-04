@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 对话管理</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+
+
+        <!-- 左侧边栏 -->
+        <div class="sidebar" id="sidebar" style="margin-left: 0">
+            <button class="toggle-btn" id="toggleSidebar" onclick="toggleSidebar()">◀</button>
+            <div class="sidebar-content">
+                <button id="newChat" onclick="createNewChat()">开启新对话</button>
+                
+                <div class="history-list">
+                    <h3>对话历史</h3>
+                    <ul id="historyList" onclick="loadChat(event)"></ul>
+                </div>
+
+                <div class="params">
+                    <div class="param-group">
+                        <label>温度: <input type="number" id="temperature" step="0.1" min="0" max="2" value="0.7"></label>
+                        <label>最大长度: <input type="number" id="maxTokens" min="1" value="2048"></label>
+                    </div>
+                    
+                    <details class="advanced-params">
+                        <summary>其它</summary>
+                        <div class="param-group">
+                            <label>API Key: <input type="text" id="apiKey"></label>
+                            <label>Web Url: <input type="text" id="webUrl"></label>
+                            <label>通用模型: <input type="text" id="generalModel"></label>
+                            <label>推理模型: <input type="text" id="reasoningModel"></label>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 主对话区域 -->
+        <div class="main-content">
+
+            <div class="chat-container" id="chatContainer">
+                <div class="insert-zone" onmouseover="showInsertButtons(this)" onmouseout="hideInsertButtons(this)">
+                    <div class="insert-buttons">
+                        <button onclick="addMessageAfter(this,'system', 'init')">System</button>
+                        <button onclick="addMessageAfter(this,'user', 'init')">User</button>
+                        <button onclick="addMessageAfter(this,'assistant', 'init')">AI</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="saveHistory" onclick="saveHistory()">保存历史</button>
+                <div>
+                    <button id="submitGeneral" onclick="submitToModel('general')">提交到通用模型</button>
+                    <button id="submitReasoning" onclick="submitToModel('reasoning')">提交到推理模型</button>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.3/purify.min.js"></script>
+    <script src="app.js"></script>
+    
+</body>
+</html>
