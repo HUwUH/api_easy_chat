@@ -214,33 +214,45 @@ async function submitToModel(type) {
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
             
-            jsonString += decoder.decode(value, { stream: true });
+            for (const line of lines) {
+                // 跳过空行和注释
+                if (line.trim() === '' || line.startsWith(':') || line.startsWith("data: [DONE]")) 
+                    continue;
+                // 提取有效 JSON 数据
+                if (line.startsWith('data: ')) {
+                    try {
+                        const jsonStr = line.slice(6); // 去掉 "data: " 前缀
+                        const data = JSON.parse(jsonStr);
 
-            //TODO：这里data的解析出了问题
-            const data = JSON.parse(jsonString);
-            jsonString = '';
-            
-
-            // 处理流式数据
-            if (data.choices && data.choices[0].delta) {
-                const reasoningContent = data.choices[0].delta.reasoning_content;
-                const content = data.choices[0].delta.content;
-
-                // 更新推理内容
-                if (reasoningContent && reasoningContentDiv) {
-                    reasoningContentDiv.textContent += reasoningContent;
-                }
-
-                // 更新普通内容
-                if (content && assistantContentDiv) {
-                    assistantContentDiv.textContent += content;
+                        // 处理流式数据
+                        if (data.choices && data.choices[0].delta) {
+                            let reasoningContent = null;
+                            if (data.choices[0].delta.reasoning_content){
+                                reasoningContent = data.choices[0].delta.reasoning_content;
+                            }
+                            const content = data.choices[0].delta.content;
+                            // 更新推理内容
+                            if (reasoningContent && reasoningContentDiv) {
+                                reasoningContentDiv.textContent += reasoningContent;
+                            }
+                            // 更新普通内容
+                            if (content && assistantContentDiv) {
+                                assistantContentDiv.textContent += content;
+                            }
+                        }
+                        result += chunk;
+                    } catch (error) {
+                        console.error('JSON 解析错误:', error);
+                    }
                 }
             }
-            result += chunk;
         }
-    } catch (error) {
-        console.error('提交模型时出错:', error);
-        alert('提交模型时出错，请检查网络或参数设置。');
+    }catch (error) {
+        console.error('错误:', error);
+        alert('错误:', error);
     }
 }
