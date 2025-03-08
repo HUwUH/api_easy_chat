@@ -185,6 +185,31 @@ async function submitToModel(type) {
             body: JSON.stringify(requestPayload)
         };
 
+
+
+        // 创建新的消息气泡
+        const chatContainer = document.querySelector('.chat-container');
+        const lastMessage = chatContainer.lastElementChild;
+        // 根据模型类型插入模板
+        const template = type === 'general' 
+            ? createMessageTemplate('assistant') 
+            : createMessageTemplate('reasoning') + createMessageTemplate('assistant');
+        lastMessage.insertAdjacentHTML('afterend', template);
+        // 根据模型类型获取内容区域
+        let reasoningContentDiv = null;
+        let assistantContentDiv = null;
+        if (type === 'reasoning') {
+            const reasonMessage = lastMessage.nextElementSibling;
+            const assistMessage = reasonMessage.nextElementSibling;
+            reasoningContentDiv = reasonMessage.querySelector('.content');
+            assistantContentDiv = assistMessage.querySelector('.content');
+        } else {
+            const assistMessage = lastMessage.nextElementSibling;
+            assistantContentDiv = assistMessage.querySelector('.content');
+        }
+
+
+
         // 发起请求
         const response = await fetch(url, requestOptions);
 
@@ -193,21 +218,10 @@ async function submitToModel(type) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // 创建新的消息气泡
-        const chatContainer = document.querySelector('.chat-container');
-        const lastMessage = chatContainer.lastElementChild;
-        // 根据模型类型插入模板
-        const template = type === 'general' ? createMessageTemplate('assistant') : createMessageTemplate('reasoning') + createMessageTemplate('assistant');
-        lastMessage.insertAdjacentHTML('afterend', template);
-        // 获取新插入的消息内容区域
-        const reasoningContentDiv = type === 'reasoning' ? chatContainer.querySelector('.message.reasoning .content') : null;
-        const assistantContentDiv = chatContainer.querySelector('.message.assistant .content');
-
         // 使用 ReadableStream 逐步接收流式数据
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let result = '';
-        let jsonString = '';
 
         while (true) {
             const { done, value } = await reader.read();
