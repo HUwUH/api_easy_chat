@@ -196,11 +196,9 @@ async function submitToModel(type) {
         // 创建新的消息气泡
         const chatContainer = document.querySelector('.chat-container');
         const lastMessage = chatContainer.lastElementChild;
-
         // 根据模型类型插入模板
         const template = type === 'general' ? createMessageTemplate('assistant') : createMessageTemplate('reasoning') + createMessageTemplate('assistant');
         lastMessage.insertAdjacentHTML('afterend', template);
-
         // 获取新插入的消息内容区域
         const reasoningContentDiv = type === 'reasoning' ? chatContainer.querySelector('.message.reasoning .content') : null;
         const assistantContentDiv = chatContainer.querySelector('.message.assistant .content');

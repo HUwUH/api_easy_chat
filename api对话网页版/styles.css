@@ -44,6 +44,7 @@ body {
     border: 1px solid #ddd;
     padding: 5px 8px;
     transition: transform 0.3s;
+    z-index: 100;
 }
 
 .history-list {
@@ -77,20 +78,23 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
 }
 
 .chat-container {
     flex: 1;
     padding: 20px;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 3px;
 }
 
 .message {
+    min-width: 15%;
     max-width: 80%;
     padding: 20px;
+    margin-top: 10px;
+    margin-bottom: 10px;
     border-radius: 12px;
     position: relative;
     transition: transform 0.2s;
@@ -106,7 +110,7 @@ body {
     margin-right: auto;
 }
 .reasoning {
-    background-color: #037d8b; /* 推理内容的背景色 */
+    background-color: #a6a57e; /* 推理内容的背景色 */
     margin-right: auto;
 }
 .system {
@@ -115,22 +119,40 @@ body {
     width: 90%;
 }
 
+
 .message-actions {
     position: absolute;
-    top: -25px;
+    top: -5px;
     right: 0;
     display: none;
-    gap: 5px;
+    
+    gap: 0;
+    padding: 0px;
 }
-
 .message:hover .message-actions {
     display: flex;
 }
+.message-actions button {
+    padding: 2px 4px; /* 减小按钮的内边距 */
+    font-size: 10px; /* 减小按钮的字体大小 */
+    border-radius: 2px; /* 减小按钮的圆角半径 */
+    border: 1px solid #ccc; /* 可选：添加边框 */
+    background-color: #f0f0f0; /* 按钮背景色 */
+    cursor: pointer; /* 鼠标指针样式 */
+    margin: 0 2px; /* 按钮之间的间距 */
+}
+
 
 .insert-zone {
-    position: relative;
-    height: 30px;
-    margin: -15px 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-width: 0 1 0 1;
+    position: sticky;
+    bottom: 0;
+    height: 15px; /* 减小高度 */
+    width: 50%; 
+    background: white;
+    margin: 0 auto; /* 水平居中 */
 }
 
 .insert-buttons {
@@ -138,42 +160,31 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    display: none;
-    gap: 5px;
+    display: flex;
+    gap: 5px; /* 减小按钮之间的间距 */
     background: white;
-    padding: 5px;
-    border-radius: 20px;
+    padding: 2px; /* 减小内边距 */
+    border-radius: 15px; /* 减小圆角半径 */
+    font-size: 0.7em; /* 减小字体大小 */
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-
-.insert-zone:hover .insert-buttons {
-    display: flex;
+.insert-buttons button {
+    padding: 3px 8px; /* 减小按钮的内边距 */
+    font-size: 0.7em; /* 减小按钮的字体大小 */
+    border-radius: 10px; /* 减小按钮的圆角半径 */
+    border: 1px solid #ccc; /* 可选：添加边框 */
 }
 
-.insert-btn {
-    cursor: pointer;
-    padding: 3px 8px;
-    border: none;
-    border-radius: 15px;
-    font-size: 0.9em;
-}
-
-.insert-system {
-    background: #c8e6c9;
-}
-.insert-user {
-    background: #bbdefb;
-}
-.insert-assistant {
-    background: #e0e0e0;
-}
 
 .action-buttons {
+    position: sticky; /* 粘性定位 */
+    bottom: 0; /* 固定在父容器底部 */
     padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     border-top: 1px solid #ddd;
     background: #f8f9fa;
+    z-index: 100; /* 确保在最上层 */
 }
 
 button {
@@ -184,9 +195,6 @@ button {
     transition: opacity 0.2s;
 }
 
-button:hover {
-    opacity: 0.8;
-}
 
 #saveHistory {
     background: #4caf50;
