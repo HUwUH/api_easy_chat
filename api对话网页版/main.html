@@ -68,6 +68,15 @@
     </div>
 
     <script src="app.js"></script>
-    
+    <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        marked.setOptions({
+            breaks: true, // 将\n转换为<br>
+            gfm: true // 启用GitHub风格的Markdown
+        });
+        // var TurndownService = require('turndown')
+        var turndownService = new TurndownService()
+    </script>
 </body>
 </html>

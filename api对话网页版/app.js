@@ -15,7 +15,7 @@ function collectCurrentMessage(includeReasoning = false) {
             return; // 跳过当前消息
         }
 
-        const content = message.querySelector('.content').textContent;
+        const content = turndownService.turndown(message.querySelector('.content').innerHTML);
         messages.push({ role, content });
     });
 
@@ -119,7 +119,7 @@ function editMessage(btn) {
     const contentDiv = btn.closest('.message').querySelector('.content');
 
     // 获取当前文本内容
-    const oldText = contentDiv.innerText;
+    const oldText = turndownService.turndown(contentDiv.innerHTML);
 
     // 创建 <textarea> 替代文本内容
     const textarea = document.createElement("textarea");
@@ -139,7 +139,7 @@ function editMessage(btn) {
     textarea.addEventListener("blur", saveEdit);
 
     function saveEdit() {
-        contentDiv.innerText = textarea.value.trim() || "（空消息）";
+        contentDiv.innerHTML = marked.parse(textarea.value) || " ";
     }
 
     // 替换原有文本
@@ -262,6 +262,10 @@ async function submitToModel(type) {
                     }
                 }
             }
+        }
+        assistantContentDiv.innerHTML = marked.parse(assistantContentDiv.textContent)
+        if(reasoningContentDiv!=null){
+            reasoningContentDiv.innerHTML = marked.parse(reasoningContentDiv.textContent)
         }
     }catch (error) {
         console.error('错误:', error);
