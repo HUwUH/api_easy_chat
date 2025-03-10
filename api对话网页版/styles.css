@@ -51,6 +51,56 @@ body {
     flex: 1;
     overflow-y: auto;
 }
+.history-title {
+    font-size: 12px;
+}
+#historyList {/* 历史项列表 */
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.history-item {/* 单个历史项 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+.history-actions {/* 操作按钮容器 */
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    justify-content: flex-end; /* 按钮靠右对齐 */
+
+    gap: 3px; /* 按钮之间的间距 */
+}
+.history-actions button {
+    width: 10%;
+    font-size: 8px; /* 图标大小 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f0f0; /* 按钮背景色 */
+    border-radius: 4px; /* 圆角 */
+    transition: background-color 0.2s ease;
+}
+
+/* 鼠标悬停效果 */
+.history-item:hover {
+    background-color: #f1f1f1;
+}
+/* 按钮悬停效果 */
+.history-actions button:hover {
+    background-color: #9ac2ee; /* 悬停时变为蓝色 */
+}
+/* 删除按钮的特殊样式 */
+.history-actions .delete-history-btn:hover {
+    background-color: #ff4d4d; /* 悬停时变为红色 */
+}
+
 
 .params {
     border-top: 1px solid #ddd;

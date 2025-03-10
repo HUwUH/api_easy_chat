@@ -18,7 +18,9 @@
                 
                 <div class="history-list">
                     <h3>对话历史</h3>
-                    <ul id="historyList" onclick="loadChat(event)"></ul>
+                    <div id="historyList">
+
+                    </div>
                 </div>
 
                 <div class="params">
@@ -47,9 +49,9 @@
             <div class="chat-container" id="chatContainer">
                 <div class="insert-zone" onmouseover="showInsertButtons(this)" onmouseout="hideInsertButtons(this)">
                     <div class="insert-buttons">
+                        <button onclick="addMessageAfter(this,'assistant', 'init')">AI</button>
                         <button onclick="addMessageAfter(this,'system', 'init')">System</button>
                         <button onclick="addMessageAfter(this,'user', 'init')">User</button>
-                        <button onclick="addMessageAfter(this,'assistant', 'init')">AI</button>
                     </div>
                 </div>
             </div>

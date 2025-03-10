@@ -21,16 +21,6 @@ function collectCurrentMessage(includeReasoning = false) {
 
     return messages;
 }
-
-//保存当前对话
-function saveCurrentHistory(){
-    //在对话历史中显示新的项目（id为时间戳，命名初始化为时间戳）
-
-}
-//更新源信息
-function updateBasicinfo(){
-
-}
 //提交信息到后端（如果有cors限制）
 function submitToBackend(type) { 
     alert(`提交到后端模型功能待实现`); 
@@ -47,12 +37,91 @@ function createMessageTemplate(role) {
     </div>
     <div class="insert-zone" onmouseover="showInsertButtons(this)" onmouseout="hideInsertButtons(this)">
         <div class="insert-buttons">
+            <button onclick="addMessageAfter(this,'assistant', 'init')">AI</button>
             <button onclick="addMessageAfter(this,'system', 'init')">System</button>
             <button onclick="addMessageAfter(this,'user', 'init')">User</button>
-            <button onclick="addMessageAfter(this,'assistant', 'init')">AI</button>
         </div>
     </div>`;
 }
+
+
+//---------------------------历史管理-------------------------------------------
+//保存当前对话
+function saveCurrentHistory(){
+    //保存历史到后端
+    const current_message = collectCurrentMessage(true);
+    const chat_id = Date.now();
+    const auto_name = `chat-${new Date(chat_id+8*3600*1000)
+        .toISOString().replace(/T/, ' ')
+        .replace(/\..+/, '')
+        .substring(0, 19)}`;
+
+    const all_data = {
+        id: chat_id,
+        title: auto_name,
+        createdAt: new Date(chat_id).toISOString(),
+        messages: [...current_message],
+    }
+    const history = JSON.parse(localStorage.getItem('chatHistory')) || { chats: {} };
+    history.chats[chat_id] = all_data;
+    localStorage.setItem('chatHistory', JSON.stringify(history));
+    //前端操作
+    addHistoryItem(auto_name,chat_id);
+    //保存当前温度、最大长度、apikey等共六个数据
+    localStorage.setItem('Temperature', parseFloat(document.getElementById('temperature').value));
+    localStorage.setItem('MaxTokens',parseInt(document.getElementById('maxTokens').value));
+    localStorage.setItem('Url',document.getElementById('webUrl').value);
+    localStorage.setItem('ApiKey',document.getElementById('apiKey').value);
+    localStorage.setItem('GeneralModel',document.getElementById('generalModel').value);
+    localStorage.setItem('ReasonModel',document.getElementById('reasoningModel').value);
+}
+//增添历史
+function addHistoryItem(name, id) {
+    const historyList = document.getElementById('historyList');
+    
+    // 使用模板字符串创建HTML
+    const html = `
+      <div class="history-item" data-id="${id}">
+        <span class="history-title">${name}</span>
+        <div class="history-actions">
+            <button class="load-history-btn" onclick="loadChat('${id}')">📖</button>
+            <button class="rename-history-btn" onclick="renameChat('${id}')">✏️</button>
+            <button class="delete-history-btn" onclick="deleteChat('${id}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  
+    // 插入到列表顶部
+    historyList.insertAdjacentHTML('afterbegin', html);
+}
+//初始化全部历史
+function initAllHistorty() {
+    //加载温度、最大长度、API Key 等数据
+    const temperature = localStorage.getItem('Temperature');
+    const maxTokens = localStorage.getItem('MaxTokens');
+    const url = localStorage.getItem('Url');
+    const apiKey = localStorage.getItem('ApiKey');
+    const generalModel = localStorage.getItem('GeneralModel');
+    const reasoningModel = localStorage.getItem('ReasonModel');
+    if (temperature !== null) document.getElementById('temperature').value = temperature;
+    if (maxTokens !== null) document.getElementById('maxTokens').value = maxTokens;
+    if (url !== null) document.getElementById('webUrl').value = url;
+    if (apiKey !== null) document.getElementById('apiKey').value = apiKey;
+    if (generalModel !== null) document.getElementById('generalModel').value = generalModel;
+    if (reasoningModel !== null) document.getElementById('reasoningModel').value = reasoningModel;
+
+    //读取历史记录
+    const history = JSON.parse(localStorage.getItem('chatHistory')) || { chats: {} };
+
+    //将历史记录按照id排序（从最新到最旧）
+    const sortedChats = Object.values(history.chats).sort((a, b) => a.id - b.id);
+
+    //调用 addHistoryItem 生成历史记录
+    sortedChats.forEach(chat => {
+        addHistoryItem(chat.title, chat.id);
+    });
+}
+
 
 
 // -------------------------前端函数定义-----------------------------
@@ -69,8 +138,6 @@ function toggleSidebar() {
 function createNewChat() {
     //保存对话
     saveCurrentHistory();
-    //更新元信息
-    updateBasicinfo();
     //初始化页面
     const chatContainer = document.getElementById('chatContainer');
     chatContainer.innerHTML = `
@@ -83,9 +150,78 @@ function createNewChat() {
         </div>`;
 }
 //重命名历史记录
-//加载历史记录
-//删除历史记录
+// 重命名历史记录
+function renameChat(id) {
+    // 找到对应的历史项元素
+    const historyItem = document.querySelector(`.history-item[data-id="${id}"]`);
+    const titleSpan = historyItem.querySelector('.history-title');
+    const originalTitle = titleSpan.textContent;
 
+    // 将标题变为可编辑的输入框
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = originalTitle;
+    input.maxLength = 20; // 限制最大长度
+    input.className = 'edit-title-input';
+    titleSpan.replaceWith(input);
+    input.focus(); // 自动聚焦
+
+    // 保存修改的逻辑
+    const saveEdit = () => {
+        const newTitle = input.value.trim();
+        // 检查合法性：非空且不超过 20 字
+        if (newTitle === '' || newTitle.length > 20) {
+            // 恢复原始标题
+            input.replaceWith(titleSpan);
+            titleSpan.textContent = originalTitle;
+            return;
+        }
+        // 更新标题显示
+        titleSpan.textContent = newTitle;
+        input.replaceWith(titleSpan);
+        //更新 localStorage 中的历史数据
+        const history = JSON.parse(localStorage.getItem('chatHistory')) || { chats: {} };
+        if (history.chats[id]) {
+            history.chats[id].title = newTitle;
+            localStorage.setItem('chatHistory', JSON.stringify(history));
+        } else {
+            alert("错误，未找到对应历史记录");
+        }
+    };
+
+    // 监听 Enter 键和失焦事件
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            saveEdit();
+        }
+    });
+    input.addEventListener('blur', saveEdit);
+}
+//加载历史记录
+function loadChat(id) {
+    const isConfirmed = confirm("是否保存当前界面历史记录？");
+    if (isConfirmed) saveCurrentHistory();
+    //TODO:完成该函数，历史记录就完成了
+}
+//删除历史记录
+function deleteChat(id) {
+    // 确认是否删除
+    const isConfirmed = confirm("确定要删除这条历史记录吗？");
+    if (!isConfirmed) return;
+
+    // 从 localStorage 中删除记录
+    const history = JSON.parse(localStorage.getItem('chatHistory')) || { chats: {} };
+    if (history.chats[id]) {
+        delete history.chats[id];
+        localStorage.setItem('chatHistory', JSON.stringify(history));
+    }
+
+    // 从页面中删除对应的历史项元素
+    const historyItem = document.querySelector(`.history-item[data-id="${id}"]`);
+    if (historyItem) {
+        historyItem.remove();
+    }
+}
 
 
 //-----对话部分
@@ -272,3 +408,11 @@ async function submitToModel(type) {
         alert('错误:', error);
     }
 }
+
+
+
+
+
+
+
+initAllHistorty();
