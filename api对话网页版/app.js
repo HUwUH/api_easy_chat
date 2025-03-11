@@ -121,6 +121,89 @@ function initAllHistorty() {
         addHistoryItem(chat.title, chat.id);
     });
 }
+//导出全部历史
+function exportHistory() {
+    // 读取聊天历史
+    const history = JSON.parse(localStorage.getItem('chatHistory')) || { chats: {} };
+    
+    // 读取六项数据
+    const settings = {
+        Temperature: parseFloat(localStorage.getItem('Temperature')),
+        MaxTokens: parseInt(localStorage.getItem('MaxTokens')),
+        Url: localStorage.getItem('Url'),
+        ApiKey: localStorage.getItem('ApiKey'),
+        GeneralModel: localStorage.getItem('GeneralModel'),
+        ReasonModel: localStorage.getItem('ReasonModel')
+    };
+    
+    // 合并数据
+    const exportData = {
+        history,
+        settings
+    };
+    
+    // 转换为 JSON 字符串
+    const jsonString = JSON.stringify(exportData, null, 2);
+    
+    // 创建 Blob 对象
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    
+    // 创建下载链接
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `chat_history_${new Date().toISOString().replace(/:/g, '-')}.json`;
+    
+    // 触发下载
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+//绑定导出按钮
+document.getElementById("exportHistory").addEventListener("click", exportHistory);
+//导入全部历史
+function importHistory(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importData = JSON.parse(e.target.result);
+            
+            if (importData.history && importData.settings) {
+                // 替换历史记录
+                localStorage.setItem('chatHistory', JSON.stringify(importData.history));
+                
+                // 替换设置项
+                localStorage.setItem('Temperature', parseFloat(importData.settings.Temperature));
+                localStorage.setItem('MaxTokens', parseInt(importData.settings.MaxTokens));
+                localStorage.setItem('Url', importData.settings.Url);
+                localStorage.setItem('ApiKey', importData.settings.ApiKey);
+                localStorage.setItem('GeneralModel', importData.settings.GeneralModel);
+                localStorage.setItem('ReasonModel', importData.settings.ReasonModel);
+                
+                alert("历史记录导入成功！");
+                location.reload(); // 重新加载页面以应用更改
+            } else {
+                alert("无效的历史文件格式！");
+            }
+        } catch (error) {
+            alert("文件解析失败！请确保上传的是正确的 JSON 文件。");
+        }
+    };
+    reader.readAsText(file);
+}
+// 创建文件输入并绑定导入功能
+document.getElementById("importHistory").addEventListener("click", function() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    input.addEventListener("change", importHistory);
+    input.click();
+});
+
+
+
 
 
 
