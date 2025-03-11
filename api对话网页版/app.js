@@ -26,20 +26,20 @@ function submitToBackend(type) {
     alert(`提交到后端模型功能待实现`); 
 }
 // 辅助函数：创建消息模板
-function createMessageTemplate(role) {
+function createMessageTemplate(role,content) {
     return `
     <div class="message ${role}">
         <div class="message-actions">
             <button onclick="editMessage(this)">✏️</button>
             <button onclick="deleteMessage(this)">🗑️</button>
         </div>
-        <div class="content"></div>
+        <div class="content">${content}</div>
     </div>
     <div class="insert-zone" onmouseover="showInsertButtons(this)" onmouseout="hideInsertButtons(this)">
         <div class="insert-buttons">
-            <button onclick="addMessageAfter(this,'assistant', 'init')">AI</button>
-            <button onclick="addMessageAfter(this,'system', 'init')">System</button>
-            <button onclick="addMessageAfter(this,'user', 'init')">User</button>
+            <button onclick="addMessageAfter(this,'assistant')">AI</button>
+            <button onclick="addMessageAfter(this,'system')">System</button>
+            <button onclick="addMessageAfter(this,'user')">User</button>
         </div>
     </div>`;
 }
@@ -143,14 +143,13 @@ function createNewChat() {
     chatContainer.innerHTML = `
         <div class="insert-zone" onmouseover="showInsertButtons(this)" onmouseout="hideInsertButtons(this)">
             <div class="insert-buttons">
-                <button onclick="addMessageAfter(this,'system', 'init')">System</button>
-                <button onclick="addMessageAfter(this,'user', 'init')">User</button>
-                <button onclick="addMessageAfter(this,'assistant', 'init')">AI</button>
+                <button onclick="addMessageAfter(this,'assistant')">AI</button>
+                <button onclick="addMessageAfter(this,'system')">System</button>
+                <button onclick="addMessageAfter(this,'user')">User</button>
             </div>
         </div>`;
 }
 //重命名历史记录
-// 重命名历史记录
 function renameChat(id) {
     // 找到对应的历史项元素
     const historyItem = document.querySelector(`.history-item[data-id="${id}"]`);
@@ -201,7 +200,33 @@ function renameChat(id) {
 function loadChat(id) {
     const isConfirmed = confirm("是否保存当前界面历史记录？");
     if (isConfirmed) saveCurrentHistory();
-    //TODO:完成该函数，历史记录就完成了
+    //初始化页面
+    const chatContainer = document.getElementById('chatContainer');
+    chatContainer.innerHTML = `
+        <div class="insert-zone" onmouseover="showInsertButtons(this)" onmouseout="hideInsertButtons(this)">
+            <div class="insert-buttons">
+                <button onclick="addMessageAfter(this,'assistant')">AI</button>
+                <button onclick="addMessageAfter(this,'system')">System</button>
+                <button onclick="addMessageAfter(this,'user')">User</button>
+            </div>
+        </div>`;
+    //获取历史消息
+    const history = JSON.parse(localStorage.getItem('chatHistory')) || { chats: {} };
+    const chatData = history.chats[id];
+    if (!chatData) {
+        alert("找不到该历史记录！");
+        return;
+    }
+    //遍历消息并渲染到界面
+    chatData.messages.forEach(msg => {
+        // 解析 Markdown 内容为 HTML
+        const parsedContent = marked.parse(msg.content);
+        // 创建消息模板
+        const messageHTML = createMessageTemplate(msg.role, parsedContent);
+        // 插入到聊天容器末尾
+        chatContainer.lastElementChild.insertAdjacentHTML('afterend', messageHTML);
+    });
+
 }
 //删除历史记录
 function deleteChat(id) {
@@ -233,8 +258,8 @@ function hideInsertButtons(zone) {
     zone.querySelector('.insert-buttons').style.display = 'none';
 }
 //插入消息
-function addMessageAfter(triggerElement,role) {
-    const template = createMessageTemplate(role);
+function addMessageAfter(triggerElement,role,content=' ') {
+    const template = createMessageTemplate(role,content);
 
     const insertZone = triggerElement.closest('.insert-zone');
     if (insertZone) {
@@ -328,15 +353,15 @@ async function submitToModel(type) {
         const lastMessage = chatContainer.lastElementChild;
         // 根据模型类型插入模板
         const template = type === 'general' 
-            ? createMessageTemplate('assistant') 
-            : createMessageTemplate('reasoning') + createMessageTemplate('assistant');
+            ? createMessageTemplate('assistant','') 
+            : createMessageTemplate('reasoning','') + createMessageTemplate('assistant','');
         lastMessage.insertAdjacentHTML('afterend', template);
         // 根据模型类型获取内容区域
         let reasoningContentDiv = null;
         let assistantContentDiv = null;
         if (type === 'reasoning') {
             const reasonMessage = lastMessage.nextElementSibling;
-            const assistMessage = reasonMessage.nextElementSibling;
+            const assistMessage = reasonMessage.nextElementSibling.nextElementSibling;
             reasoningContentDiv = reasonMessage.querySelector('.content');
             assistantContentDiv = assistMessage.querySelector('.content');
         } else {
@@ -382,7 +407,7 @@ async function submitToModel(type) {
                             if (data.choices[0].delta.reasoning_content){
                                 reasoningContent = data.choices[0].delta.reasoning_content;
                             }
-                            const content = data.choices[0].delta.content;
+                            let content = data.choices[0].delta.content;
                             // 更新推理内容
                             if (reasoningContent && reasoningContentDiv) {
                                 reasoningContentDiv.textContent += reasoningContent;

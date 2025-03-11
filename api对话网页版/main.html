@@ -49,9 +49,9 @@
             <div class="chat-container" id="chatContainer">
                 <div class="insert-zone" onmouseover="showInsertButtons(this)" onmouseout="hideInsertButtons(this)">
                     <div class="insert-buttons">
-                        <button onclick="addMessageAfter(this,'assistant', 'init')">AI</button>
-                        <button onclick="addMessageAfter(this,'system', 'init')">System</button>
-                        <button onclick="addMessageAfter(this,'user', 'init')">User</button>
+                        <button onclick="addMessageAfter(this,'assistant')">AI</button>
+                        <button onclick="addMessageAfter(this,'system')">System</button>
+                        <button onclick="addMessageAfter(this,'user')">User</button>
                     </div>
                 </div>
             </div>
@@ -70,8 +70,8 @@
     </div>
 
     <script src="app.js"></script>
-    <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="lib/turndown.js"></script>
+    <script src="lib/marked.min.js"></script>
     <script>
         marked.setOptions({
             breaks: true, // 将\n转换为<br>
